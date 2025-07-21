@@ -155,18 +155,24 @@ if (contactForm) {
 
 // Language switching logic using data-i18n
 const translations = {};
-fetch('translations.json')
-  .then(res => res.json())
-  .then(data => {
-    Object.assign(translations, data);
-    setLanguage(document.documentElement.lang || 'ar');
-  });
+
+// Load translations and set language on page load
+function loadAndSetLanguage() {
+  fetch('translations.json')
+    .then(res => res.json())
+    .then(data => {
+      Object.assign(translations, data);
+      const savedLang = localStorage.getItem('siteLang') || document.documentElement.lang || 'ar';
+      setLanguage(savedLang);
+    });
+}
 
 function setLanguage(lang) {
   const t = translations[lang] || {};
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   document.body.setAttribute('lang', lang);
+  localStorage.setItem('siteLang', lang);
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (t[key]) {
@@ -178,17 +184,21 @@ function setLanguage(lang) {
 const langToggle = document.getElementById('lang-toggle');
 const langDropdown = document.getElementById('lang-dropdown');
 
-langToggle.addEventListener('click', () => {
-  langDropdown.style.display = langDropdown.style.display === 'none' ? 'flex' : 'none';
-});
-
-document.querySelectorAll('.lang-option').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    const lang = btn.getAttribute('data-lang');
-    setLanguage(lang);
-    langDropdown.style.display = 'none';
+if (langToggle && langDropdown) {
+  langToggle.addEventListener('click', () => {
+    langDropdown.style.display = langDropdown.style.display === 'none' ? 'flex' : 'none';
   });
-});
+  document.querySelectorAll('.lang-option').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const lang = btn.getAttribute('data-lang');
+      setLanguage(lang);
+      langDropdown.style.display = 'none';
+    });
+  });
+}
+
+// Apply language on every page load
+window.addEventListener('DOMContentLoaded', loadAndSetLanguage);
 
 // Carousel logic for Home page
 if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/' || window.location.pathname === '/kayan-static/') {
